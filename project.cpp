@@ -1,8 +1,11 @@
 #include <iostream>
+#include <fstream>
 #include <string>
+#include <vector>
 #include <cctype>
 
 using namespace std;
+
 class Scanner
 {
 public:
@@ -27,64 +30,199 @@ public:
         OPENBRACKET,
         CLOSEDBRACKET,
         NUMBER,
+        INVALID
     };
 
-public:
-    TokenType getToken(string input)
+    struct Token
     {
-        if (input == "if")
-            return IF;
-        if (input == "then")
-            return THEN;
-        if (input == "end")
-            return END;
-        if (input == "repeat")
-            return REPEAT;
-        if (input == "until")
-            return UNTIL;
-        if (input == "read")
-            return READ;
-        if (input == "write")
-            return WRITE;
-        if (input == ":=")
-            return ASSIGN;
-        if (input == ";")
-            return SEMICOLON;
-        if (input == "<")
-            return LESSTHAN;
-        if (input == "=")
-            return EQUAL;
+        string value;
+        string type;
+    };
 
-        if (isIdentifier(input))
-            return IDENTIFIER;
-        if (isNumber(input))
-            return NUMBER;
+    Token getToken(const string& input)
+    {
+        TokenType tokenType = INVALID;
+
+        if (input == "if")
+            tokenType = IF;
+        else if (input == "then")
+            tokenType = THEN;
+        else if (input == "end")
+            tokenType = END;
+        else if (input == "repeat")
+            tokenType = REPEAT;
+        else if (input == "until")
+            tokenType = UNTIL;
+        else if (input == "read")
+            tokenType = READ;
+        else if (input == "write")
+            tokenType = WRITE;
+        else if (input == ":=")
+            tokenType = ASSIGN;
+        else if (input == ";")
+            tokenType = SEMICOLON;
+        else if (input == "<")
+            tokenType = LESSTHAN;
+        else if (input == "=")
+            tokenType = EQUAL;
+        else if (input == "+")
+            tokenType = PLUS;
+        else if (input == "-")
+            tokenType = MINUS;
+        else if (input == "*")
+            tokenType = MULT;
+        else if (input == "/")
+            tokenType = DIV;
+        else if (input == "(")
+            tokenType = OPENBRACKET;
+        else if (input == ")")
+            tokenType = CLOSEDBRACKET;
+        else if (isIdentifier(input))
+            tokenType = IDENTIFIER;
+        else if (isNumber(input))
+            tokenType = NUMBER;
+
+        return {input, tokenTypeToString(tokenType)};
     }
 
-    bool isNumber(string s)
+    vector<Token> scanLine(const string& line)
     {
-        if (s.empty())
+        vector<Token> tokens;
+        string currentLexeme;
+
+        for (size_t i = 0; i < line.length(); i++)
+        {
+            char currentCharacter = line[i];
+
+            if (isspace(static_cast<unsigned char>(currentCharacter)))
+            {
+                addLexeme(tokens, currentLexeme);
+                currentLexeme.clear();
+            }
+            else if (currentCharacter == ':' &&
+                     i + 1 < line.length() &&
+                     line[i + 1] == '=')
+            {
+                addLexeme(tokens, currentLexeme);
+                currentLexeme.clear();
+
+                tokens.push_back(getToken(":="));
+                i++;
+            }
+            else if (isSingleCharacterToken(currentCharacter))
+            {
+                addLexeme(tokens, currentLexeme);
+                currentLexeme.clear();
+
+                tokens.push_back(getToken(string(1, currentCharacter)));
+            }
+            else
+            {
+                currentLexeme += currentCharacter;
+            }
+        }
+
+        addLexeme(tokens, currentLexeme);
+
+        return tokens;
+    }
+
+private:
+    void addLexeme(vector<Token>& tokens, const string& lexeme)
+    {
+        if (!lexeme.empty())
+        {
+            tokens.push_back(getToken(lexeme));
+        }
+    }
+
+    bool isSingleCharacterToken(char character)
+    {
+        return character == ';' ||
+               character == '<' ||
+               character == '=' ||
+               character == '+' ||
+               character == '-' ||
+               character == '*' ||
+               character == '/' ||
+               character == '(' ||
+               character == ')';
+    }
+
+    string tokenTypeToString(TokenType tokenType)
+    {
+        switch (tokenType)
+        {
+        case SEMICOLON:
+            return "semicolon";
+        case IF:
+            return "if";
+        case THEN:
+            return "then";
+        case END:
+            return "end";
+        case REPEAT:
+            return "repeat";
+        case UNTIL:
+            return "until";
+        case IDENTIFIER:
+            return "Identifier";
+        case ASSIGN:
+            return "assign";
+        case READ:
+            return "read";
+        case WRITE:
+            return "write";
+        case LESSTHAN:
+            return "less-than";
+        case EQUAL:
+            return "equal";
+        case PLUS:
+            return "plus";
+        case MINUS:
+            return "minus";
+        case MULT:
+            return "multiply";
+        case DIV:
+            return "divide";
+        case OPENBRACKET:
+            return "open-bracket";
+        case CLOSEDBRACKET:
+            return "closed-bracket";
+        case NUMBER:
+            return "number";
+        case INVALID:
+            return "invalid";
+        default:
+            return "invalid";
+        }
+    }
+
+    bool isNumber(const string& input)
+    {
+        if (input.empty())
             return false;
 
-        for (char c : s)
+        for (char character : input)
         {
-            if (!isdigit(c))
-            {
+            if (!isdigit(static_cast<unsigned char>(character)))
                 return false;
-            }
         }
 
         return true;
     }
 
-    bool isIdentifier(string input)
+    bool isIdentifier(const string& input)
     {
-        if (input.empty() || !isalpha(input[0]))
-            return false;
-
-        for (char c : input)
+        if (input.empty() ||
+            !isalpha(static_cast<unsigned char>(input[0])))
         {
-            if (!isalnum(c))
+            return false;
+        }
+
+        for (char character : input)
+        {
+            if (!isalnum(static_cast<unsigned char>(character)))
                 return false;
         }
 
@@ -94,11 +232,49 @@ public:
 
 int main()
 {
-    Scanner p;
+    Scanner scanner;
+    string line;
+    vector<string> inputLines;
 
-    Scanner::TokenType token = p.getToken("if");
+    cout << "Enter source-code lines one at a time." << endl;
+    cout << "Press Enter on an empty line to finish input." << endl;
+    cout << "-----------------------------------------------" << endl;
 
-    cout << token << endl; // Prints the enum's integer value
+    while (true)
+    {
+        cout << "> ";
+        getline(cin, line);
+
+        if (line.empty())
+            break;
+
+        inputLines.push_back(line);
+    }
+
+    ofstream outputFile("tokens.txt");
+
+    if (!outputFile)
+    {
+        cerr << "Error: Could not create tokens.txt" << endl;
+        return 1;
+    }
+
+    for (const string& inputLine : inputLines)
+    {
+        vector<Scanner::Token> tokens = scanner.scanLine(inputLine);
+
+        for (const Scanner::Token& token : tokens)
+        {
+            outputFile << token.value << ", "
+                       << token.type << endl;
+        }
+    }
+
+    outputFile.close();
+
+    cout << endl;
+    cout << "Tokenization completed successfully." << endl;
+    cout << "Output written to tokens.txt" << endl;
 
     return 0;
 }
