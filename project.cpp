@@ -5,8 +5,6 @@
 #include <cctype>
 
 using namespace std;
-
-
 class Scanner
 {
 public:
@@ -33,30 +31,35 @@ public:
         NUMBER,
     };
 
+private:
+    TokenType currentStatus;
+
 public:
     Scanner(TokenType s)
     {
         currentStatus = s;
     }
-    
-    bool isNumber(string s) {
-    if (s.empty()) return false;
-
-    for (char c : s) {
-        if (!isdigit(static_cast<unsigned char>(c))) {
+    bool isNumber(string s)
+    {
+        if (s.empty())
             return false;
-        }
-    }
 
-    return true;
-}
+        for (char c : s)
+        {
+            if (!isdigit(static_cast<unsigned char>(c)))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
     void getToken(string input)
     {
         {
         }
     }
 };
-
 
 int main()
 {
