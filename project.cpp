@@ -1,6 +1,4 @@
 #include <iostream>
-#include <sstream>
-#include <vector>
 #include <string>
 #include <cctype>
 
@@ -31,14 +29,38 @@ public:
         NUMBER,
     };
 
-private:
-    TokenType currentStatus;
-
 public:
-    Scanner(TokenType s)
+    TokenType getToken(string input)
     {
-        currentStatus = s;
+        if (input == "if")
+            return IF;
+        if (input == "then")
+            return THEN;
+        if (input == "end")
+            return END;
+        if (input == "repeat")
+            return REPEAT;
+        if (input == "until")
+            return UNTIL;
+        if (input == "read")
+            return READ;
+        if (input == "write")
+            return WRITE;
+        if (input == ":=")
+            return ASSIGN;
+        if (input == ";")
+            return SEMICOLON;
+        if (input == "<")
+            return LESSTHAN;
+        if (input == "=")
+            return EQUAL;
+
+        if (isIdentifier(input))
+            return IDENTIFIER;
+        if (isNumber(input))
+            return NUMBER;
     }
+
     bool isNumber(string s)
     {
         if (s.empty())
@@ -46,7 +68,7 @@ public:
 
         for (char c : s)
         {
-            if (!isdigit(static_cast<unsigned char>(c)))
+            if (!isdigit(c))
             {
                 return false;
             }
@@ -54,17 +76,29 @@ public:
 
         return true;
     }
-    void getToken(string input)
+
+    bool isIdentifier(string input)
     {
+        if (input.empty() || !isalpha(input[0]))
+            return false;
+
+        for (char c : input)
         {
+            if (!isalnum(c))
+                return false;
         }
+
+        return true;
     }
 };
 
 int main()
 {
-    Scanner p(Scanner::IF);
-    p.getToken("if");
+    Scanner p;
+
+    Scanner::TokenType token = p.getToken("if");
+
+    cout << token << endl; // Prints the enum's integer value
 
     return 0;
 }
