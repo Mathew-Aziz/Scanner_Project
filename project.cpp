@@ -230,50 +230,98 @@ private:
     }
 };
 
+void processLine(
+    const string& line,
+    Scanner& scanner,
+    ofstream& outputFile)
+{
+    vector<Scanner::Token> tokens = scanner.scanLine(line);
+
+    for (const Scanner::Token& token : tokens)
+    {
+        outputFile << token.value << ", "
+                   << token.type << endl;
+    }
+}
+
 int main()
 {
     Scanner scanner;
-    string line;
-    vector<string> inputLines;
-
-    cout << "Enter source-code lines one at a time." << endl;
-    cout << "Press Enter on an empty line to finish input." << endl;
-    cout << "-----------------------------------------------" << endl;
-
-    while (true)
-    {
-        cout << "> ";
-        getline(cin, line);
-
-        if (line.empty())
-            break;
-
-        inputLines.push_back(line);
-    }
-
     ofstream outputFile("tokens.txt");
 
     if (!outputFile)
     {
-        cerr << "Error: Could not create tokens.txt" << endl;
+        cerr << "Error: Could not create tokens.txt." << endl;
         return 1;
     }
 
-    for (const string& inputLine : inputLines)
-    {
-        vector<Scanner::Token> tokens = scanner.scanLine(inputLine);
+    int choice;
 
-        for (const Scanner::Token& token : tokens)
+    cout << "Choose input method:" << endl;
+    cout << "1. Read source code from a file" << endl;
+    cout << "2. Enter source code manually" << endl;
+    cout << "Enter your choice: ";
+
+    cin >> choice;
+    cin.ignore();
+
+    if (choice == 1)
+    {
+        string fileName;
+        cout << "Enter the input file name: ";
+        getline(cin, fileName);
+
+        ifstream inputFile(fileName);
+
+        if (!inputFile)
         {
-            outputFile << token.value << ", "
-                       << token.type << endl;
+            cerr << "Error: Could not open input file: "
+                 << fileName << endl;
+
+            return 1;
         }
+
+        string line;
+
+        while (getline(inputFile, line))
+        {
+            processLine(line, scanner, outputFile);
+        }
+
+        inputFile.close();
+
+        cout << "Input file processed successfully." << endl;
+    }
+    else if (choice == 2)
+    {
+        string line;
+
+        cout << endl;
+        cout << "Enter source-code lines one at a time." << endl;
+        cout << "Press Enter on an empty line to finish input." << endl;
+        cout << "-----------------------------------------------" << endl;
+
+        while (true)
+        {
+            cout << "> ";
+            getline(cin, line);
+
+            if (line.empty())
+                break;
+
+            processLine(line, scanner, outputFile);
+        }
+
+        cout << "Manual input processed successfully." << endl;
+    }
+    else
+    {
+        cerr << "Error: Invalid choice." << endl;
+        return 1;
     }
 
     outputFile.close();
 
-    cout << endl;
-    cout << "Tokenization completed successfully." << endl;
     cout << "Output written to tokens.txt" << endl;
 
     return 0;
