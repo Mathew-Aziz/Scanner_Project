@@ -14,6 +14,7 @@ public:
         SEMICOLON,
         IF,
         THEN,
+        ELSE,
         END,
         REPEAT,
         UNTIL,
@@ -39,7 +40,7 @@ public:
         string type;
     };
 
-    Token getToken(const string& input)
+    Token getToken(const string &input)
     {
         TokenType tokenType = INVALID;
 
@@ -47,6 +48,8 @@ public:
             tokenType = IF;
         else if (input == "then")
             tokenType = THEN;
+        else if (input == "else")
+            tokenType = ELSE;
         else if (input == "end")
             tokenType = END;
         else if (input == "repeat")
@@ -85,7 +88,7 @@ public:
         return {input, tokenTypeToString(tokenType)};
     }
 
-    vector<Token> scanLine(const string& line)
+    vector<Token> scanLine(const string &line)
     {
         vector<Token> tokens;
         string currentLexeme;
@@ -94,7 +97,21 @@ public:
         {
             char currentCharacter = line[i];
 
-            if (isspace(static_cast<unsigned char>(currentCharacter)))
+            if (insideComment)
+            {
+                if (currentCharacter == '}')
+                    insideComment = false;
+
+                continue;
+            }
+
+            if (currentCharacter == '{')
+            {
+                addLexeme(tokens, currentLexeme);
+                currentLexeme.clear();
+                insideComment = true;
+            }
+            else if (isspace(static_cast<unsigned char>(currentCharacter)))
             {
                 addLexeme(tokens, currentLexeme);
                 currentLexeme.clear();
@@ -128,7 +145,9 @@ public:
     }
 
 private:
-    void addLexeme(vector<Token>& tokens, const string& lexeme)
+    bool insideComment = false;
+
+    void addLexeme(vector<Token> &tokens, const string &lexeme)
     {
         if (!lexeme.empty())
         {
@@ -154,51 +173,53 @@ private:
         switch (tokenType)
         {
         case SEMICOLON:
-            return "semicolon";
+            return "SEMICOLON";
         case IF:
-            return "if";
+            return "IF";
         case THEN:
-            return "then";
+            return "THEN";
+        case ELSE:
+            return "ELSE";
         case END:
-            return "end";
+            return "END";
         case REPEAT:
-            return "repeat";
+            return "REPEAT";
         case UNTIL:
-            return "until";
+            return "UNTIL";
         case IDENTIFIER:
-            return "Identifier";
+            return "IDENTIFIER";
         case ASSIGN:
-            return "assign";
+            return "ASSIGN";
         case READ:
-            return "read";
+            return "READ";
         case WRITE:
-            return "write";
+            return "WRITE";
         case LESSTHAN:
-            return "less-than";
+            return "LESSTHAN";
         case EQUAL:
-            return "equal";
+            return "EQUAL";
         case PLUS:
-            return "plus";
+            return "PLUS";
         case MINUS:
-            return "minus";
+            return "MINUS";
         case MULT:
-            return "multiply";
+            return "MULT";
         case DIV:
-            return "divide";
+            return "DIV";
         case OPENBRACKET:
-            return "open-bracket";
+            return "OPENBRACKET";
         case CLOSEDBRACKET:
-            return "closed-bracket";
+            return "CLOSEDBRACKET";
         case NUMBER:
-            return "number";
+            return "NUMBER";
         case INVALID:
-            return "invalid";
+            return "INVALID";
         default:
             return "invalid";
         }
     }
 
-    bool isNumber(const string& input)
+    bool isNumber(const string &input)
     {
         if (input.empty())
             return false;
@@ -212,7 +233,7 @@ private:
         return true;
     }
 
-    bool isIdentifier(const string& input)
+    bool isIdentifier(const string &input)
     {
         if (input.empty() ||
             !isalpha(static_cast<unsigned char>(input[0])))
@@ -231,13 +252,13 @@ private:
 };
 
 void processLine(
-    const string& line,
-    Scanner& scanner,
-    ofstream& outputFile)
+    const string &line,
+    Scanner &scanner,
+    ofstream &outputFile)
 {
     vector<Scanner::Token> tokens = scanner.scanLine(line);
 
-    for (const Scanner::Token& token : tokens)
+    for (const Scanner::Token &token : tokens)
     {
         outputFile << token.value << ", "
                    << token.type << endl;
@@ -255,71 +276,30 @@ int main()
         return 1;
     }
 
-    int choice;
+    string fileName;
+    cout << "Enter the input file name: ";
+    getline(cin, fileName);
 
-    cout << "Choose input method:" << endl;
-    cout << "1. Read source code from a file" << endl;
-    cout << "2. Enter source code manually" << endl;
-    cout << "Enter your choice: ";
+    ifstream inputFile(fileName);
 
-    cin >> choice;
-    cin.ignore();
-
-    if (choice == 1)
+    if (!inputFile)
     {
-        string fileName;
-        cout << "Enter the input file name: ";
-        getline(cin, fileName);
+        cerr << "Error: Could not open input file: "
+             << fileName << endl;
 
-        ifstream inputFile(fileName);
-
-        if (!inputFile)
-        {
-            cerr << "Error: Could not open input file: "
-                 << fileName << endl;
-
-            return 1;
-        }
-
-        string line;
-
-        while (getline(inputFile, line))
-        {
-            processLine(line, scanner, outputFile);
-        }
-
-        inputFile.close();
-
-        cout << "Input file processed successfully." << endl;
-    }
-    else if (choice == 2)
-    {
-        string line;
-
-        cout << endl;
-        cout << "Enter source-code lines one at a time." << endl;
-        cout << "Press Enter on an empty line to finish input." << endl;
-        cout << "-----------------------------------------------" << endl;
-
-        while (true)
-        {
-            cout << "> ";
-            getline(cin, line);
-
-            if (line.empty())
-                break;
-
-            processLine(line, scanner, outputFile);
-        }
-
-        cout << "Manual input processed successfully." << endl;
-    }
-    else
-    {
-        cerr << "Error: Invalid choice." << endl;
         return 1;
     }
 
+    string line;
+
+    while (getline(inputFile, line))
+    {
+        processLine(line, scanner, outputFile);
+    }
+
+    inputFile.close();
+
+    cout << "Input file processed successfully." << endl;
     outputFile.close();
 
     cout << "Output written to tokens.txt" << endl;
