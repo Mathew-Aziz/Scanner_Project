@@ -1,1 +1,4 @@
 tokens.txt
+
+//discard all json files
+*.json
