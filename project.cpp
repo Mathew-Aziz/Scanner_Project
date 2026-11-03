@@ -272,6 +272,23 @@ void processLine(
 int main()
 {
     Scanner scanner;
+
+    string fileName;
+    cout << "Enter the input file name: ";
+    getline(cin, fileName);
+
+    ifstream inputFile(fileName);
+
+    if (!inputFile.is_open())
+    {
+        cerr << "Error: Could not open input file: "
+             << fileName << endl;
+
+        cout << "\nPress Enter to exit...";
+        cin.get();
+        return 1;
+    }
+
     ofstream outputFile("tokens.txt");
 
     if (!outputFile)
@@ -280,36 +297,19 @@ int main()
         return 1;
     }
 
-    string fileName;
-    cout << "Enter the input file name: ";
-    getline(cin, fileName);
-
-    ifstream inputFile(fileName);
-
-    if (!inputFile)
-    {
-        cerr << "Error: Could not open input file: "
-             << fileName << endl;
-
-        return 1;
-    }
-
     string line;
-
     while (getline(inputFile, line))
     {
         processLine(line, scanner, outputFile);
     }
 
     inputFile.close();
-
-    cout << "Input file processed successfully." << endl;
     outputFile.close();
 
+    cout << "Input file processed successfully." << endl;
     cout << "Output written to tokens.txt" << endl;
 
     cout << "\nPress Enter to exit...";
-    cin.clear();
     cin.get();
 
     return 0;
