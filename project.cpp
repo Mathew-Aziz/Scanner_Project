@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <cctype>
+#include <algorithm>
 
 using namespace std;
 
@@ -43,46 +44,49 @@ public:
     Token getToken(const string &input)
     {
         TokenType tokenType = INVALID;
+        string lower = input;
+        for (char &c : lower)
+            c = tolower(c);
 
-        if (input == "if")
+        if (lower == "if")
             tokenType = IF;
-        else if (input == "then")
+        else if (lower == "then")
             tokenType = THEN;
-        else if (input == "else")
+        else if (lower == "else")
             tokenType = ELSE;
-        else if (input == "end")
+        else if (lower == "end")
             tokenType = END;
-        else if (input == "repeat")
+        else if (lower == "repeat")
             tokenType = REPEAT;
-        else if (input == "until")
+        else if (lower == "until")
             tokenType = UNTIL;
-        else if (input == "read")
+        else if (lower == "read")
             tokenType = READ;
-        else if (input == "write")
+        else if (lower == "write")
             tokenType = WRITE;
-        else if (input == ":=")
+        else if (lower == ":=")
             tokenType = ASSIGN;
-        else if (input == ";")
+        else if (lower == ";")
             tokenType = SEMICOLON;
-        else if (input == "<")
+        else if (lower == "<")
             tokenType = LESSTHAN;
-        else if (input == "=")
+        else if (lower == "=")
             tokenType = EQUAL;
-        else if (input == "+")
+        else if (lower == "+")
             tokenType = PLUS;
-        else if (input == "-")
+        else if (lower == "-")
             tokenType = MINUS;
-        else if (input == "*")
+        else if (lower == "*")
             tokenType = MULT;
-        else if (input == "/")
+        else if (lower == "/")
             tokenType = DIV;
-        else if (input == "(")
+        else if (lower == "(")
             tokenType = OPENBRACKET;
-        else if (input == ")")
+        else if (lower == ")")
             tokenType = CLOSEDBRACKET;
-        else if (isIdentifier(input))
+        else if (isIdentifier(lower))
             tokenType = IDENTIFIER;
-        else if (isNumber(input))
+        else if (isNumber(lower))
             tokenType = NUMBER;
 
         return {input, tokenTypeToString(tokenType)};
@@ -111,7 +115,7 @@ public:
                 currentLexeme.clear();
                 insideComment = true;
             }
-            else if (isspace(static_cast<unsigned char>(currentCharacter)))
+            else if (isspace((currentCharacter)))
             {
                 addLexeme(tokens, currentLexeme);
                 currentLexeme.clear();
@@ -226,7 +230,7 @@ private:
 
         for (char character : input)
         {
-            if (!isdigit(static_cast<unsigned char>(character)))
+            if (!isdigit((character)))
                 return false;
         }
 
@@ -236,14 +240,14 @@ private:
     bool isIdentifier(const string &input)
     {
         if (input.empty() ||
-            !isalpha(static_cast<unsigned char>(input[0])))
+            !isalpha((input[0])))
         {
             return false;
         }
 
         for (char character : input)
         {
-            if (!isalnum(static_cast<unsigned char>(character)))
+            if (!isalnum((character)))
                 return false;
         }
 
@@ -303,6 +307,10 @@ int main()
     outputFile.close();
 
     cout << "Output written to tokens.txt" << endl;
+
+    cout << "\nPress Enter to exit...";
+    cin.clear();
+    cin.get();
 
     return 0;
 }
